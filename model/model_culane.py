@@ -1,4 +1,5 @@
 import torch
+from model.fpn import FPN
 from model.backbone import resnet
 import numpy as np
 from utils.common import initialize_weights
@@ -24,6 +25,7 @@ class parsingNet(torch.nn.Module):
         self.input_dim = input_height // 32 * input_width // 32 * 8
 
         self.model = resnet(backbone, pretrained=pretrained)
+        self.fpn = FPN(in_channels_list=[128, 256, 512], out_channels=128)
 
         # for avg pool experiment
         # self.pool = torch.nn.AdaptiveAvgPool2d(1)
@@ -41,26 +43,29 @@ class parsingNet(torch.nn.Module):
         if self.use_aux:
             self.seg_head = SegHead(backbone, num_lane_on_row + num_lane_on_col)
         initialize_weights(self.cls)
-    def forward(self, x):
-
-        x2,x3,fea = self.model(x)
-        if self.use_aux:
-            seg_out = self.seg_head(x2, x3,fea)
-        fea = self.pool(fea)
-        # print(fea.shape)
-        # print(self.coord.shape)
-        # fea = torch.cat([fea, self.coord.repeat(fea.shape[0],1,1,1)], dim = 1)
         
+    def forward(self, x):
+        x2, x3, fea = self.model(x)  # x2 = C3, x3 = C4, fea = C5
+
+        if self.use_aux:
+            seg_out = self.seg_head(x2, x3, fea)
+
+        fpn_feats = self.fpn([x2, x3, fea])  # Pass all 3 to FPN
+        fea = self.pool(fpn_feats[0])  # You can try fpn_feats[-1] or mean, etc.
+
         fea = fea.view(-1, self.input_dim)
         out = self.cls(fea)
 
-        pred_dict = {'loc_row': out[:,:self.dim1].view(-1,self.num_grid_row, self.num_cls_row, self.num_lane_on_row), 
-                'loc_col': out[:,self.dim1:self.dim1+self.dim2].view(-1, self.num_grid_col, self.num_cls_col, self.num_lane_on_col),
-                'exist_row': out[:,self.dim1+self.dim2:self.dim1+self.dim2+self.dim3].view(-1, 2, self.num_cls_row, self.num_lane_on_row), 
-                'exist_col': out[:,-self.dim4:].view(-1, 2, self.num_cls_col, self.num_lane_on_col)}
+        pred_dict = {
+            'loc_row': out[:, :self.dim1].view(-1, self.num_grid_row, self.num_cls_row, self.num_lane_on_row),
+            'loc_col': out[:, self.dim1:self.dim1+self.dim2].view(-1, self.num_grid_col, self.num_cls_col, self.num_lane_on_col),
+            'exist_row': out[:, self.dim1+self.dim2:self.dim1+self.dim2+self.dim3].view(-1, 2, self.num_cls_row, self.num_lane_on_row),
+            'exist_col': out[:, -self.dim4:].view(-1, 2, self.num_cls_col, self.num_lane_on_col)
+        }
+
         if self.use_aux:
             pred_dict['seg_out'] = seg_out
-        
+
         return pred_dict
 
     def forward_tta(self, x):
