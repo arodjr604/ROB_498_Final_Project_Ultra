@@ -19,6 +19,8 @@ class LaneExternalIterator(object):
         self.shard_id = shard_id
         self.num_shards = num_shards
 
+        print("List path: ", list_path)
+
         if isinstance(list_path, str):
             with open(list_path, 'r') as f:
                 total_list = f.readlines()
