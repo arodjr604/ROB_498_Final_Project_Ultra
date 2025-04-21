@@ -7,6 +7,7 @@ from utils.metrics import update_metrics, reset_metrics
 
 from utils.common import calc_loss, get_model, get_train_loader, inference, merge_config, save_model, cp_projects
 from utils.common import get_work_dir, get_logger
+from data.weather_utils import WeatherCondition
 
 import time
 from evaluation.eval_wrapper import eval_lane
@@ -80,6 +81,12 @@ if __name__ == "__main__":
     assert cfg.backbone in ['18','34','50','101','152','50next','101next','50wide','101wide', '34fca']
 
     train_loader = get_train_loader(cfg)
+    
+    # Initialize weather condition detector
+    if args.local_rank == 0:
+        dist_print("Initializing weather condition detector...")
+    WeatherCondition.initialize(train_loader)
+    
     net = get_model(cfg)
 
     if distributed:

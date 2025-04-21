@@ -6,3 +6,7 @@ scikit-learn
 pathspec
 imagesize
 ujson
+matplotlib
+pillow
+torchvision
+numpy

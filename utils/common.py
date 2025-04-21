@@ -206,7 +206,7 @@ def inference(net, data_label, dataset):
         raise NotImplementedError
 
 def inference_culane_tusimple(net, data_label):
-    pred = net(data_label['images'])
+    pred = net(data_label['images'], data_label['weather_conditions'])
     cls_out_ext_label = (data_label['labels_row'] != -1).long()
     cls_out_col_ext_label = (data_label['labels_col'] != -1).long()
     res_dict = {'cls_out': pred['loc_row'], 'cls_label': data_label['labels_row'], 'cls_out_col':pred['loc_col'],'cls_label_col':data_label['labels_col'],
@@ -218,7 +218,7 @@ def inference_culane_tusimple(net, data_label):
 
     return res_dict
 def inference_curvelanes(net, data_label):
-    pred = net(data_label['images'])
+    pred = net(data_label['images'], data_label['weather_conditions'])
     cls_out_ext_label = (data_label['labels_row'] != -1).long()
     cls_out_col_ext_label = (data_label['labels_col'] != -1).long()
 

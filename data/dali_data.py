@@ -9,6 +9,8 @@ import os
 from nvidia.dali.plugin.pytorch import DALIGenericIterator
 from nvidia.dali.plugin.pytorch import LastBatchPolicy
 import my_interp
+from data.weather_utils import WeatherCondition
+
 class LaneExternalIterator(object):
     def __init__(self, path, list_path, batch_size=None, shard_id=None, num_shards=None, mode = 'train', dataset_name=None):
         assert mode in ['train', 'test']
@@ -64,6 +66,7 @@ class LaneExternalIterator(object):
         images = []
         seg_images = []
         labels = []
+        weather_conditions = []
 
         for _ in range(self.batch_size):
             l = self.list[self.i % self.n]
@@ -90,9 +93,12 @@ class LaneExternalIterator(object):
             points = np.array(self.cached_points[img_name])
             labels.append(points.astype(np.float32))
 
+            weather_condition = WeatherCondition.get_weather_condition(img_path)
+            weather_conditions.append(weather_condition)
+
             self.i = self.i + 1
             
-        return (images, seg_images, labels)
+        return (images, seg_images, labels, weather_conditions)
 
     
     def _prepare_test_batch(self):
@@ -140,9 +146,11 @@ def encoded_images_sizes(jpegs):
 def ExternalSourceTrainPipeline(batch_size, num_threads, device_id, external_data, train_width, train_height, top_crop, normalize_image_scale = False, nscale_w = None, nscale_h = None):
     pipe = Pipeline(batch_size, num_threads, device_id)
     with pipe:
-        jpegs, seg_images, labels = fn.external_source(source=external_data, num_outputs=3)
+        jpegs, seg_images, labels, weather_conditions = fn.external_source(source=external_data, num_outputs=4)
         images = fn.decoders.image(jpegs, device="mixed")
         seg_images = fn.decoders.image(seg_images, device="mixed")
+        weather_conditions = weather_conditions.gpu()
+        
         if normalize_image_scale:
             images = fn.resize(images, resize_x=nscale_w, resize_y=nscale_h)
             seg_images = fn.resize(seg_images, resize_x=nscale_w, resize_y=nscale_h, interp_type=types.INTERP_NN)
@@ -176,7 +184,7 @@ def ExternalSourceTrainPipeline(batch_size, num_threads, device_id, external_dat
                                             mean = [0., 0., 0.],
                                             std = [1., 1., 1.],
                                             crop = (train_height, train_width), crop_pos_x = 0., crop_pos_y = 1.)
-        pipe.set_outputs(images, seg_images, labels)
+        pipe.set_outputs(images, seg_images, labels, weather_conditions)
     return pipe
 
 def ExternalSourceValPipeline(batch_size, num_threads, device_id, external_data, train_width, train_height):
@@ -228,7 +236,7 @@ class TrainCollect:
             pipe = ExternalSourceTrainPipeline(batch_size, num_threads, shard_id, eii, train_width, train_height,top_crop, normalize_image_scale = True, nscale_w = 2560, nscale_h = 1440)
         else:
             pipe = ExternalSourceTrainPipeline(batch_size, num_threads, shard_id, eii, train_width, train_height,top_crop)
-        self.pii = DALIGenericIterator(pipe, output_map = ['images', 'seg_images', 'points'], last_batch_padded=True, last_batch_policy=LastBatchPolicy.PARTIAL)
+        self.pii = DALIGenericIterator(pipe, output_map = ['images', 'seg_images', 'points', 'weather_conditions'], last_batch_padded=True, last_batch_policy=LastBatchPolicy.PARTIAL)
         self.eii_n = eii.n
         self.batch_size = batch_size
 
@@ -245,10 +253,11 @@ class TrainCollect:
         images = data[0]['images']
         seg_images = data[0]['seg_images']
         points = data[0]['points']
+        weather_conditions = data[0]['weather_conditions']
+        
         points_row = my_interp.run(points, self.interp_loc_row, 0)
         points_row_extend = self._extend(points_row[:,:,:,0]).transpose(1,2)
         labels_row = (points_row_extend / self.original_image_width * (self.num_cell_row - 1)).long()
-        labels_row[points_row_extend < 0] = -1
         labels_row[points_row_extend > self.original_image_width] = -1
         labels_row[labels_row < 0] = -1
         labels_row[labels_row > (self.num_cell_row - 1)] = -1
@@ -270,7 +279,15 @@ class TrainCollect:
         labels_col_float[labels_col_float<0] = -1
         labels_col_float[labels_col_float>1] = -1
 
-        return {'images':images, 'seg_images':seg_images, 'labels_row':labels_row, 'labels_col':labels_col, 'labels_row_float':labels_row_float, 'labels_col_float':labels_col_float}
+        return {
+            'images': images,
+            'seg_images': seg_images,
+            'labels_row': labels_row,
+            'labels_col': labels_col,
+            'labels_row_float': labels_row_float,
+            'labels_col_float': labels_col_float,
+            'weather_conditions': weather_conditions
+        }
     
     def __len__(self):
         return int((self.eii_n + self.batch_size - 1) / self.batch_size)

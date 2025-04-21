@@ -5,6 +5,8 @@ import numpy as np
 from utils.common import initialize_weights
 from model.seg_model import SegHead
 from model.layer import CoordConv
+from model.weather_module import WeatherConditionModule
+import torch.nn as nn
 
 class parsingNet(torch.nn.Module):
     def __init__(self, pretrained=True, backbone='50', num_grid_row = None, num_cls_row = None, num_grid_col = None, num_cls_col = None, num_lane_on_row = None, num_lane_on_col = None, use_aux=False,input_height = None, input_width = None, fc_norm = False):
@@ -24,6 +26,14 @@ class parsingNet(torch.nn.Module):
         mlp_mid_dim = 2048
         self.input_dim = input_height // 32 * input_width // 32 * 8
 
+        self.weather_module = WeatherConditionModule(num_conditions=4, embedding_dim=128)
+        
+        self.weather_fusion = nn.Sequential(
+            nn.Linear(self.input_dim + 128, mlp_mid_dim),
+            nn.ReLU(),
+            nn.Linear(mlp_mid_dim, mlp_mid_dim)
+        )
+
         self.model = resnet(backbone, pretrained=pretrained)
         self.fpn = FPN(in_channels_list=[128, 256, 512], out_channels=128)
 
@@ -34,9 +44,7 @@ class parsingNet(torch.nn.Module):
         # self.register_buffer('coord', torch.stack([torch.linspace(0.5,9.5,10).view(-1,1).repeat(1,50), torch.linspace(0.5,49.5,50).repeat(10,1)]).view(1,2,10,50))
 
         self.cls = torch.nn.Sequential(
-            torch.nn.LayerNorm(self.input_dim) if fc_norm else torch.nn.Identity(),
-            torch.nn.Linear(self.input_dim, mlp_mid_dim),
-            torch.nn.ReLU(),
+            torch.nn.LayerNorm(mlp_mid_dim) if fc_norm else torch.nn.Identity(),
             torch.nn.Linear(mlp_mid_dim, self.total_dim),
         )
         self.pool = torch.nn.Conv2d(512,8,1) if backbone in ['34','18', '34fca'] else torch.nn.Conv2d(2048,8,1)
@@ -44,16 +52,21 @@ class parsingNet(torch.nn.Module):
             self.seg_head = SegHead(backbone, num_lane_on_row + num_lane_on_col)
         initialize_weights(self.cls)
         
-    def forward(self, x):
+    def forward(self, x, weather_condition=None):
         x2, x3, fea = self.model(x)  # x2 = C3, x3 = C4, fea = C5
 
         if self.use_aux:
             seg_out = self.seg_head(x2, x3, fea)
 
-        fpn_feats = self.fpn([x2, x3, fea])  # Pass all 3 to FPN
-        fea = self.pool(fpn_feats[0])  # You can try fpn_feats[-1] or mean, etc.
-
+        fpn_feats = self.fpn([x2, x3, fea])
+        fea = self.pool(fpn_feats[0])
         fea = fea.view(-1, self.input_dim)
+
+        if weather_condition is not None:
+            weather_features = self.weather_module(weather_condition)
+            fea = torch.cat([fea, weather_features], dim=1)
+            fea = self.weather_fusion(fea)
+        
         out = self.cls(fea)
 
         pred_dict = {
