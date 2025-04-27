@@ -10,7 +10,9 @@ from data.weather_utils import WeatherCondition
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.weather_utils import WeatherCondition
-from utils.common import get_train_loader, merge_config
+#from utils.common import get_train_loader, merge_config
+from utils.common import merge_config
+from data.dataloader import get_train_loader
 
 def visualize_clusters(cluster_samples, save_dir="results/weather_clusters"):
     """Visualize samples from each weather cluster"""
