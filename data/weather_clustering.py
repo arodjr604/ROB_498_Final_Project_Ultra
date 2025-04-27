@@ -25,6 +25,8 @@ class WeatherFeatureExtractor(nn.Module):
         
     def extract_features(self, image):
         """Extract features from an image using the pretrained model"""
+        if image.dim() == 3:
+            image = image.unsqueeze(0)
         with torch.no_grad():
             features = self.model(image)
             features = features.squeeze()
