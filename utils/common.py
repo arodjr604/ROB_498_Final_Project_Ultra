@@ -182,7 +182,6 @@ def get_model(cfg):
 def get_train_loader(cfg):
     if cfg.dataset == 'CULane':
         print("CFG: ", cfg.data_root)
-        cfg.data_root = "/home/arodjr/rob498_deeprob/final/CULane/CULane/"
 
         train_loader = TrainCollect(cfg.batch_size, 4, cfg.data_root, os.path.join(cfg.data_root, 'list/train_gt.txt'), get_rank(), get_world_size(), 
                                 cfg.row_anchor, cfg.col_anchor, cfg.train_width, cfg.train_height, cfg.num_cell_row, cfg.num_cell_col, cfg.dataset, cfg.crop_ratio)
