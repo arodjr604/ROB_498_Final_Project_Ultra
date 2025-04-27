@@ -106,8 +106,13 @@ class WeatherFeatureExtractor(nn.Module):
                 images = batch['images']
             else:
                 images = batch[0]
+            #features = self.extract_features(images)
+            #features_scaled = self.scaler.transform(features)
             features = self.extract_features(images)
+            if features.ndim == 1:
+                features = features.reshape(1, -1)
             features_scaled = self.scaler.transform(features)
+
             clusters = self.kmeans.predict(features_scaled)
             
             for i, cluster in enumerate(clusters):
