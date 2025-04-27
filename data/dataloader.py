@@ -54,7 +54,9 @@ def get_train_loader(batch_size, data_root, griding_num, dataset, use_aux, distr
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, sampler = sampler, num_workers=4)
 
-    return train_loader, cls_num_per_lane
+    #return train_loader, cls_num_per_lane
+    return train_dataset, train_loader, cls_num_per_lane
+
 
 def get_test_loader(batch_size, data_root,dataset, distributed, crop_ratio, train_width, train_height):
 

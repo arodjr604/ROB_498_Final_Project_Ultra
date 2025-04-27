@@ -81,12 +81,14 @@ if __name__ == "__main__":
     dist_print(cfg)
     assert cfg.backbone in ['18','34','50','101','152','50next','101next','50wide','101wide', '34fca']
 
-    train_loader = get_train_loader(cfg)
+    #train_loader = get_train_loader(cfg)
+    train_dataset, train_loader, cls_num_per_lane = get_train_loader(cfg.batch_size, cfg.data_root, cfg.griding_num, cfg.dataset, cfg.use_aux, cfg.distributed, cfg.num_lanes)
+
     
-    # Initialize weather condition detector
     if args.local_rank == 0:
         dist_print("Initializing weather condition detector...")
-    WeatherCondition.initialize(train_loader)
+    weather_condition = WeatherCondition()
+    weather_condition.initialize(train_dataset)
     
     net = get_model(cfg)
 
