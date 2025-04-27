@@ -45,7 +45,12 @@ class WeatherFeatureExtractor(nn.Module):
         all_features = []
         
         for batch in tqdm(dataloader):
-            images = batch['images']
+            #images = batch['images']
+            if isinstance(batch, dict):
+                images = batch['images']
+            else:
+                images = batch[0]
+
             features = self.extract_features(images)
             all_features.append(features)
         
@@ -94,7 +99,11 @@ class WeatherFeatureExtractor(nn.Module):
         cluster_samples = {i: [] for i in range(self.num_clusters)}
         
         for batch in dataloader:
-            images = batch['images']
+            #images = batch['images']
+            if isinstance(batch, dict):
+                images = batch['images']
+            else:
+                images = batch[0]
             features = self.extract_features(images)
             features_scaled = self.scaler.transform(features)
             clusters = self.kmeans.predict(features_scaled)
