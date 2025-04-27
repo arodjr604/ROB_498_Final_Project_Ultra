@@ -26,7 +26,8 @@ if __name__ == "__main__":
         else:
             compatible_state_dict[k] = v
 
-    net.load_state_dict(compatible_state_dict, strict = True)
+    net.load_state_dict(compatible_state_dict, strict = False)
+
 
     if distributed:
         net = torch.nn.parallel.DistributedDataParallel(net, device_ids = [args.local_rank])
