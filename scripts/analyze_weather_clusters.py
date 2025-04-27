@@ -45,6 +45,7 @@ def visualize_clusters(cluster_samples, save_dir="results/weather_clusters"):
 
 def main():
     args, cfg = merge_config()
+    cfg.distributed = False
     
     train_dataset, train_loader, cls_num_per_lane = get_train_loader(
         cfg.batch_size, cfg.data_root, cfg.griding_num, cfg.dataset, cfg.use_aux, cfg.distributed, cfg.num_lanes
