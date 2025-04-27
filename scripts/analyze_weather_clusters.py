@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
+from data.weather_utils import WeatherCondition
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -45,13 +46,16 @@ def visualize_clusters(cluster_samples, save_dir="results/weather_clusters"):
 def main():
     args, cfg = merge_config()
     
-    train_loader = get_train_loader(cfg)
+    train_dataset, train_loader, cls_num_per_lane = get_train_loader(
+        cfg.batch_size, cfg.data_root, cfg.griding_num, cfg.dataset, cfg.use_aux, cfg.distributed, cfg.num_lanes
+    )
     
     print("Initializing weather condition detector...")
-    WeatherCondition.initialize(train_loader, force_refit=True)
+    weather_condition = WeatherCondition()
+    weather_condition.initialize(train_dataset, force_refit=True)
     
     print("Analyzing weather clusters...")
-    cluster_samples = WeatherCondition.analyze_weather_clusters(train_loader, num_samples=5)
+    cluster_samples = weather_condition.analyze_weather_clusters(train_dataset, num_samples=5)
     
     print("Visualizing weather clusters...")
     visualize_clusters(cluster_samples)
