@@ -1,6 +1,0 @@
-file: /home/arodjr/workspace/20250427_173836_lr_5e-02_b_32/txt/out2_hlight.txt
-tp: 914 fp: 782 fn: 771
-precision: 0.538915
-recall: 0.542433
-Fmeasure: 0.540668
-

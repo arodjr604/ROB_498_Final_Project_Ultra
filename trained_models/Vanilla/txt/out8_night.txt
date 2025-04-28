@@ -1,6 +1,0 @@
-file: /home/arodjr/workspace/20250427_173836_lr_5e-02_b_32/txt/out8_night.txt
-tp: 12796 fp: 8840 fn: 8234
-precision: 0.591422
-recall: 0.608464
-Fmeasure: 0.599822
-

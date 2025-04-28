@@ -1,6 +1,0 @@
-file: /home/arodjr/workspace/20250427_173836_lr_5e-02_b_32/txt/out7_cross.txt
-tp: 0 fp: 3856 fn: 0
-precision: 0
-recall: -1
-Fmeasure: 0
-

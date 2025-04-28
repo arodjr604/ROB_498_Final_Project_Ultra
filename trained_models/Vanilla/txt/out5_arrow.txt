@@ -1,6 +1,0 @@
-file: /home/arodjr/workspace/20250427_173836_lr_5e-02_b_32/txt/out5_arrow.txt
-tp: 2478 fp: 651 fn: 704
-precision: 0.791946
-recall: 0.778755
-Fmeasure: 0.785296
-

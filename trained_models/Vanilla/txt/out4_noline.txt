@@ -1,6 +1,0 @@
-file: /home/arodjr/workspace/20250427_173836_lr_5e-02_b_32/txt/out4_noline.txt
-tp: 5394 fp: 7789 fn: 8627
-precision: 0.409163
-recall: 0.384709
-Fmeasure: 0.396559
-
