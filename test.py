@@ -6,6 +6,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.benchmark = True
 
     args, cfg = merge_config()
+    cfg.data_root = '' #change this to the root directory with your CULane in it ej: '/home/arodjr/CULane/'
 
     distributed = False
     if 'WORLD_SIZE' in os.environ:

@@ -49,6 +49,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.benchmark = True
 
     args, cfg = merge_config()
+    cfg.data_root = '' #change this to the root directory with your CULane in it ej: '/home/arodjr/CULane/'
 
     if args.local_rank == 0:
         work_dir = get_work_dir(cfg)
