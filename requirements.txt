@@ -10,3 +10,4 @@ matplotlib
 pillow
 torchvision
 numpy
+weather_utils
