@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
-# from data.weather_utils import WeatherCondition
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
