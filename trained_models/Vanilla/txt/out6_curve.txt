@@ -1,0 +1,6 @@
+file: /home/arodjr/workspace/20250427_173836_lr_5e-02_b_32/txt/out6_curve.txt
+tp: 754 fp: 476 fn: 558
+precision: 0.613008
+recall: 0.574695
+Fmeasure: 0.593234
+
