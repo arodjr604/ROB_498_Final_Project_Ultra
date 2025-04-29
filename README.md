@@ -1,8 +1,7 @@
-# NOTE THIS IS NOT THE PAPER IMPLEMENTATION OF ULTRA FAST LANE DETECTION V2. INSTEAD THIS WAS A EXTENSION OF A PROJECT FOR A CLASS AT THE UNIVERSITY OF MICHIGAN. CREDIT FOR THE BASE OF ULTRA FAST LANE DETECTION V2 GOES TO Zequn Qin, Pengyi Zhang, and Xi Li.
+# Ultra Fast Adverse Condition Lane Detection
 
 # Ultra-Fast-Lane-Detection-V2
 PyTorch implementation of the paper "[Ultra Fast Deep Lane Detection with Hybrid Anchor Driven Ordinal Classification](https://arxiv.org/abs/2206.07389)".
-
 
 ![](ufldv2.png "vis")
 
@@ -53,7 +52,7 @@ mkdir tmp
 python -m torch.distributed.launch --nproc_per_node=8 test.py configs/culane_res18.py --test_model /path/to/your/model.pth --test_work_dir ./tmp
 ```
 # Our Extensions
-In order to address the concernes we had about lane detection in adverse weather conditions, we implemented an FPN layer after the backbone with the goal of improving on the original resnet-18 feature extraction. Additionally, we experiemented with dynamic prompting as a way to set a weather mode. 
+In order to address the concernes we had about lane detection in adverse weather conditions, we implemented an FPN layer after the backbone with the goal of improving on the original resnet-18 feature extraction. Additionally, we experiemented with dynamic prompting as another solution to lane detection in bad conditions. We designed a weather condition module that encodes the current weather as a learnable embedding. Each weather type (clear, rain, snow, fog) is represented initially as a one-hot vector, which is projected into a dense embedding space through a small multi-layer perceptron (MLP). This weather embedding is then concatenated with the feature map output from the backbone network. We introduced a fusion MLP to process combined features and extended the parsingNet lane detection model to accept a weather_condition input, ensuring weather-aware features throughout. The data loader was updated to supply weather prompts during training and inference, enabling dynamic prompting that improves detection across conditions without needing separate models.
 
 # Visualization
 We provide a script to visualize the detection results. Run the following commands to visualize on the testing set of CULane.
