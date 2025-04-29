@@ -1,3 +1,5 @@
+# NOTE THIS IS NOT THE PAPER IMPLEMENTATION OF ULTRA FAST LANE DETECTION V2. INSTEAD THIS WAS A EXTENSION OF A PROJECT FOR A CLASS AT THE UNIVERSITY OF MICHIGAN. CREDIT FOR THE BASE OF ULTRA FAST LANE DETECTION V2 GOES TO Zequn Qin, Pengyi Zhang, and Xi Li.
+
 # Ultra-Fast-Lane-Detection-V2
 PyTorch implementation of the paper "[Ultra Fast Deep Lane Detection with Hybrid Anchor Driven Ordinal Classification](https://arxiv.org/abs/2206.07389)".
 

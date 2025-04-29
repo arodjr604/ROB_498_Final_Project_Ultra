@@ -25,10 +25,31 @@
     pip install --extra-index-url https://developer.download.nvidia.com/compute/redist --upgrade nvidia-dali-cuda110
     # Install Nvidia DALI (Very fast data loading lib))
 
+    #Next, install the needed CUDA-Toolkit library from this url https://developer.nvidia.com/cuda-11-7-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=runfile_local.
+    #This will give you the correct version of CUDA-Toolkit to run the program
+
+    #This solution to fix g++ is only avaliable for ubuntu/wsl and might not work in other distros
+    sudo nano /etc/apt/sources.list
+
+    #Enter the following line inside the file
+    deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal main universe
+
+    #Make sure to exit and save
+    apt update
+    apt install g++-7
+
+    export CXX=/usr/bin/g++-7
+    export CC=/usr/bin/gcc-7
+
     cd my_interp
 
     sh build.sh
-    # If this fails, you might need to upgrade your GCC to v7.3.0
+
+    #This next line is to correctly tell the program where to find libcuda.so to avoid a runtime error
+    export LD_LIBRARY_PATH=/usr/lib/wsl/lib:$LD_LIBRARY_PATH
+
+    #This next line is only useful for WSL to disalbe NVML to avoid a runtime error
+    export DALI_DISABLE_NVML=1 
     ```
 
 4. Data preparation
@@ -69,6 +90,11 @@
     python scripts/cache_culane_ponits.py --root /path/to/your/culane
 
     # this will generate a culane_anno_cache.json file containing all the lane annotations, which can be used for speed up training without reading lane segmentation maps
+
+    # note that if this fails due to the program not having writting access to the program, then you can use the following command to fix it. There is likey a better way of allowing writing privildges, but this worked for when we were working with it
+
+    sudo chmod 777 ~/path/to/your/CULane 
+
     ```
     #### **4.3 CurveLanes dataset**
     The directory arrangement of CurveLanes should look like:
@@ -124,4 +150,16 @@
     cmake --build . --config Release  
     # or, open the "xxx.sln" file by Visual Studio and click build button
     move culane_evaluator ../evaluate
+    ```
+
+6. Modifyig data_root
+
+    For whatever reason, whenever test.py, train.py, and other python files were run, the cfg would configure the data_root incorrectly leading to the program not being able to find the dataset. To fix this, one must edit the files directly and add in the path to where the dataset files are.
+
+    ```Shell
+    #The following lines will look as follows in train.py (line 52), test.py (line 9), and analyze_weather_clusters.py (line 50)
+    cfg.data_root = ''
+
+    #To correctly fix this replace the empty space to the location of the dataset you are using. Use the following as an example of how one of our memebers did it
+    cfg.data_root = '/home/andrew/CULane/CULane/'
     ```
