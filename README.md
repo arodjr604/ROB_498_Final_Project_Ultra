@@ -52,6 +52,8 @@ mkdir tmp
 
 python -m torch.distributed.launch --nproc_per_node=8 test.py configs/culane_res18.py --test_model /path/to/your/model.pth --test_work_dir ./tmp
 ```
+# Our Extensions
+In order to address the concernes we had about lane detection in adverse weather conditions, we implemented an FPN layer after the backbone with the goal of improving on the original resnet-18 feature extraction. Additionally, we experiemented with dynamic prompting as a way to set a weather mode. 
 
 # Visualization
 We provide a script to visualize the detection results. Run the following commands to visualize on the testing set of CULane.
